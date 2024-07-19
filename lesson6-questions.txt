@@ -3,45 +3,55 @@ Questions for Lesson 6
 1. When you enable CRUD operations on a table in the database, you need to add four things
 to your Rails application.  When you generate a scaffold, all four are created.What are they?
 
-
-
+We need to create model, controller, view and route for controller/action.
 
 2. When you specify a route in config/routes.rb, you need to include certain information.  What
 must be included? In addition, you may specify an additional parameter to create a variable
 that describes the route.  How do you do that? What variable is created?
 
-
+We need to specify HTTP method (verb), then path, then controller/action, and optionally an aliase for this route.
 
 3. What does the Rails db:migrate command do?
 
-
+Apply a migration to DB.
 
 4. What file do you look at to see the current database schema?
 
+db/schema.rb
 
 5. What command shows the routes?
 
+`rails routes`
 
 6. How can you start the Rails console? How can you do CRUD operations from the console?
 
+Run `rails`, then create an instance of needed model object, hydrate it with data and apply changes to DB with `#save`.
+Same with querying data, just call `#all` or `#find` from an instance of needed model object.
 
 7. What statements are in erb files that make them different from html files?  What are the
 two kinds of special statements, and how are they marked in the erb file? Where are they executed?
 
+`<% %>` and `<%= %>` to execute ruby code and output smth respectively.
+Ruby interpreter will parse a view file, replace `<%= %>` with a ready html and then we will have a complete SSRed html-page.
 
 8. Consider this statement: @forum = Forum.new().  Why is Forum capitalized?  Why is @forum not
 capitalized? Why is the @ used?
 
-
+Forum - is a name of a model class, by agreement is capitalized.
+@forum - is an instance variable that should be called with `@` for Ruby to understand it is the instance variable.
 
 9. Consider these statements:
 
 @forum = Forum.new(...)
-@forum =Forum.create(...)
+@forum = Forum.create(...)
 @forum.save(...)
 
 What is the difference between Forum.new() and Forum.create()?  Why can't you do Forum.save(...)?
 
+Forum.create() - creates a new object of Forum model and saves it.
+Forum.new() - only creates a new object of Forum model, thus we need to call @forum.save(...) in order to persist data to DB.
+We can't do Forum.save(...), cause `#save` is a method and can be called only from an class object, not a class itself.
+In other words, `#save` is not static (not a class method).
 
 10. In the forums controller, you have a method called show:
 
@@ -56,6 +66,8 @@ is a hash called params that is passed to that method.  And, in this case, the p
 hash has a value, params[:id].  What is the value for this element of the hash? How
 did it get there?
 
-
+We have `get '/users/:id', to: 'users#show', as: 'user'` in routes, thus will have `:id` in params populated from `request.parameters` (GET query params).
+User object will be accessable from `set_forum` method as it is set as safe in before_action middleware.
+Rails does a default rendering and will render `show.html.erb` view (@see https://guides.rubyonrails.org/layouts_and_rendering.html#rendering-by-default-convention-over-configuration-in-action).
 
 
