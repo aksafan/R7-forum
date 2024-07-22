@@ -21,9 +21,9 @@ class PostsController < ApplicationController
   end
 
   def update
-    @post.update(post_params)
+    @post = Post.new(post_params)
     @post.save
-    redirect_to post_url, notice: 'Your post was updated.'
+    redirect_to @post, notice: 'Your post was updated.'
   end
 
   def destroy
