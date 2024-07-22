@@ -4,6 +4,11 @@ Questions for Lesson 7
 before some or all of the controller actions execute?  Where can you put that
 change so that it affects all controllers?
 
+Use `before_action` filter and define a private method with a logic.
+Also `around_action` could be partially used for that as it wraps entire action and yields it.
+
+Define a list of effected actions with combination of `only` and/or `except`.
+Also `skip_before_action` could be used for this purpose.
 
 
 2. Consider the following statement:
@@ -14,12 +19,31 @@ This creates several files, including two you need to know about.  What are they
 After you do this statement but before starting the rails server, you have to do another
 command.  What is that command?
 
+It generates a migration and a model (and test).
+And we need to run `rails db:migrate` to apply that changes to DB schema.
 
 
 3. What table is created as a result of the migration described above? What are the column
 names in that table? What is the primary key? What are the foreign keys?  What does a 
 foreign key do?
 
+It creates (too lazy to rewrite all of these, just copy-pasted from a schema):
+- "id" integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+- "forum_id" integer NOT NULL,
+- "user_id" integer NOT NULL,
+- "priority" integer,-
+- "created_at" datetime(6) NOT NULL,
+- "updated_at" datetime(6) NOT NULL,
+
+Primary key is "id".
+
+Foreign keys are:
+- CONSTRAINT "fk_rails_de48816c0d" FOREIGN KEY ("forum_id") REFERENCES "forums" ("id"),
+- CONSTRAINT "fk_rails_933bdff476" FOREIGN KEY ("user_id") REFERENCES "users" ("id")
+
+Foreign key sets a relation between a field of current table and a primary key of another table.
+E.g. "subscriptions.forum_id" REFERENCES "forums.id".
+This helps to support data integrity and consistency.
 
 
 4. You have the following lines in the Subscription model:
@@ -32,6 +56,7 @@ that if you have a @subscription (an instance of Subscription), you have a coupl
 used to refer to associated database methods.  What are those methods?  (Actually there are a few,
 but there are two in particular you should know.)
 
+@subscription.user and @subscription.forum (displays many-to-one relation).
 
 
 5. You have the following lines in the User model.
@@ -43,6 +68,9 @@ has_many :forums, through: :subscriptions
 What are threee important methods that are available to instances of the user model because
 of these lines?
 
+@user.subscriptions (displays one-to-many relation).
+@user.posts (displays one-to-many relation).
+@user.forums (displays many-to-many relation).
 
 
 6. Suppose that user is an instance of the User class. What kind of object is returned by
@@ -52,6 +80,9 @@ Then do:
 user=User.first
 subscriptions = user.subscriptions
 subscriptions.class
+
+It returns `ActiveRecord_Associations_CollectionProxy` that's a middlemen between an association (user) and
+a set of its linked entities (subscriptions).
 
 The second call returns what looks like an empty array -- but it isn't
 of the Array class. This is important, because you can do, for 
@@ -67,6 +98,7 @@ Try that last line.  You will see that it creates a subscription object, but tha
 object is not entirely empty.  Which attribute is set? Where does it get that
 value?
 
+user_id is set from a relation association (user).
 
 
 7. Suppose that user is an instance of User, and forum is an instance of Forum.  What
@@ -74,6 +106,11 @@ Active Record Statement could you use to retrieve all the user's posts for that
 forum?  Hint: You need to have a where in your statement. Try this out in the console.
 You will see the SQL that is executed logged to the screen.  What is that SQL?
 
+AR query - `User.where(id:2).first.forums.first.posts`
+SQL queries - SELECT "users".* FROM "users" WHERE "users"."id" = ? ORDER BY "users"."id" ASC LIMIT ?  [["id", 2], ["LIMIT", 1]]
+  SELECT "forums".* FROM "forums" INNER JOIN "subscriptions" ON "forums"."id" = "subscriptions"."forum_id" WHERE "subscriptions"."user_id" = ? ORDER BY "forums"."id" ASC LIMIT ?  [["user_id", 2], ["LIMIT", 1]]
+  SELECT "posts".* FROM "posts" WHERE "posts"."forum_id" = ?  [["forum_id", 3]]
+  Could be done in one query with JOINs, but I suppose this task was about showing AR relations usage.
 
 
 8. You have the following method in your posts controller:
@@ -87,6 +124,17 @@ You will see the SQL that is executed logged to the screen.  What is that SQL?
 There is a security exposure, a risk that a hacker could do damage.  What is that
 risk? What two things are done in your code to prevent the risk?
 
+It could be:
+- Broken Access Control attack.
+- Identification and Authentication Failures attack.
+- CSRF attack.
+- SQL-injection attack.
+
+To address these potential issues we used (accordingly):
+- AC filter through `check_logon` method added to before_action filter.
+- Identity checking through `check_access` method added to before_action filter.
+- CSRF-token added.
+- AR query builder.
 
 
 9. The routes for subscriptions are nested under the forum routes.  How does this
@@ -94,12 +142,13 @@ change the routes?  What is the additional hash key and value that is passed in 
 params hash to the subscriptions controller as a result of this nesting? Which routes
 are unaffected by the nesting?
 
-
+It adds additional prefix. E.g. for `post#create` action it will be `GET /forums/:forum_id/posts/new`.
+`forum_id` is added as a hash_key. Same is with subscription sub-resources.
+It works for all actions except: `[:index]`.
 
 
 10. Every action method must do exactly one of two things -- that is, each
 method may do all sorts of logic, but at the end, it has to do one of two
 things, depending on the outcome of the logic.  What are those two things?
 
-
-
+Render a view or redirect somewhere.
