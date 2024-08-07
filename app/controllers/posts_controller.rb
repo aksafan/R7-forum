@@ -6,8 +6,14 @@ class PostsController < ApplicationController
 
   def create
     @post = @forum.posts.new(post_params)
-    @post.save
-    redirect_to @post, notice: 'Your post was created.'
+
+    respond_to do |format|
+      if @post.save
+        format.html { redirect_to @post, notice: 'Your post was created.' }
+      else
+        format.html { render :edit, status: :unprocessable_entity }
+      end
+    end
   end
 
   def new
@@ -22,8 +28,14 @@ class PostsController < ApplicationController
 
   def update
     @post.update(post_params)
-    @post.save
-    redirect_to post_url, notice: 'Your post was updated.'
+
+    respond_to do |format|
+      if @post.save
+        format.html { redirect_to post_url, notice: 'Your post was updated.' }
+      else
+        format.html { render :edit, status: :unprocessable_entity }
+      end
+    end
   end
 
   def destroy
