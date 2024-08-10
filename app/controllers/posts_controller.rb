@@ -2,7 +2,7 @@ class PostsController < ApplicationController
   before_action :check_logon, except: %w[show]
   before_action :set_forum, only: %w[create new]
   before_action :set_post, only: %w[show edit update destroy]
-  before_action :check_access, only: %w[edit update delete]
+  before_action :check_access, only: %w[edit update destroy]
 
   def create
     @post = @forum.posts.new(post_params)
@@ -20,11 +20,9 @@ class PostsController < ApplicationController
     @post = @forum.posts.new
   end
 
-  def edit
-  end
+  def edit; end
 
-  def show
-  end
+  def show; end
 
   def update
     @post.update(post_params)
